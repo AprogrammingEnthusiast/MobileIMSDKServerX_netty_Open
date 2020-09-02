@@ -31,6 +31,9 @@ import net.openmob.mobileimsdk.server.utils.LocalSendHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * MobileIMSDK框架的IM消息逻辑处理器。
+ */
 public class LogicProcessor
 {
 	private static Logger logger = LoggerFactory.getLogger(LogicProcessor.class);  

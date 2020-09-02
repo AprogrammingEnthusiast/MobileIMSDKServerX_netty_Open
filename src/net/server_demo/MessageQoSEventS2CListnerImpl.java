@@ -14,7 +14,7 @@
  * 
  * MessageQoSEventS2CListnerImpl.java at 2020-4-14 23:20:49, code by Jack Jiang.
  */
-package net.demo;
+package net.server_demo;
 
 import java.util.ArrayList;
 

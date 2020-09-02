@@ -30,17 +30,24 @@ import io.netty.channel.DefaultChannelConfig;
 import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.EventLoop;
 import io.netty.channel.socket.DatagramPacket;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.RecyclableArrayList;
 
+/**
+ * 仿照TCP协议的AbstractNioChannel实现的专用于UDP的客端Channel实现类。
+ * {@link NioSocketChannel} 类似netty原生提供的socket客户端类库
+ */
 public class MBUDPChannel extends AbstractChannel 
 {
 	protected final ChannelMetadata metadata = new ChannelMetadata(false);
 	protected final DefaultChannelConfig config = new DefaultChannelConfig(this);
 	
 	private final ConcurrentLinkedQueue<ByteBuf> buffers = new ConcurrentLinkedQueue<ByteBuf>();
-	
+
+	/** 对应的服务端Channel实例引用 **/
 	protected final MBUDPServerChannel serverchannel;
+	/** 本Channel对应的客户端IP+端口信息 **/
 	protected final InetSocketAddress remote;
 	
 	private volatile boolean open = true;
@@ -96,6 +103,10 @@ public class MBUDPChannel extends AbstractChannel
 		buffers.add(buffer);
 	}
 
+	/**
+	 * 对Channel读操作的准备工作。
+	 * @throws Exception
+	 */
 	@Override
 	protected void doBeginRead() throws Exception
 	{

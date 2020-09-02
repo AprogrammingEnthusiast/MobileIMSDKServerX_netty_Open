@@ -20,16 +20,28 @@ import java.util.UUID;
 
 import com.google.gson.Gson;
 
+/**
+ * Java、Android和Server端共用的协议定义类。
+ */
 public class Protocal
 {
+	/** 意义：是否来自跨服务器的消息，true表示是、否则不是。 **/
 	private boolean bridge = false;
+	/** 意义：协议类型。 **/
 	private int type = 0;
+	/** 意义：协议数据内容。 **/
 	private String dataContent = null;
+	/** 意义：消息发出方的id 说明：为“-1”表示未设定、为“0”表示来自Server。 **/
 	private String from = "-1";
+	/** 意义：消息接收方的id（当用户退出时，此值可不设置） 说明：为“-1”表示未设定、为“0”表示发给Server。 **/
 	private String to = "-1";
+	/** 意义：用于QoS消息包的质量保证时作为消息的指纹特征码（理论上全局唯一）。 **/
 	private String fp = null;
+	/** 意义：true表示本包需要进行QoS质量保证，否则不需要. **/
 	private boolean QoS = false;
+	/** 意义：应用层专用字段——用于应用层存放聊天、推送等场景下的消息类型。 **/
 	private int typeu = -1;
+	/** 本字段仅用于客户端QoS时：表示丢包重试次数 **/
 	private transient int retryCount = 0;
 
 	public Protocal(int type, String dataContent, String from, String to)

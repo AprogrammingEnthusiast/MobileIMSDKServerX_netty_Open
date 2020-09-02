@@ -82,6 +82,10 @@ public abstract class ServerLauncher
  		// default do nothing
  	}
 
+	/**
+	 * 服务端是否启动并运行中。
+	 * @return
+	 */
  	public boolean isRunning()
  	{
  		return running;
@@ -91,6 +95,7 @@ public abstract class ServerLauncher
  	{	
  		if(!this.running)
  		{
+ 			//初始化server核心处理器
  			serverCoreHandler = initServerCoreHandler();
 
  			initListeners();
@@ -146,52 +151,96 @@ public abstract class ServerLauncher
     	
     	this.running = false;
     }
-    
-    protected ServerCoreHandler initServerCoreHandler()
+
+	/**
+	 * 初始化MobileIMSDK的ServerCoreHandler实现类。
+	 * @return
+	 */
+	protected ServerCoreHandler initServerCoreHandler()
     {
     	return new ServerCoreHandler();
     }
-    
-    protected abstract void initListeners();
-    
-    protected ServerBootstrap initServerBootstrap4Netty()
+
+	/**
+	 * 初始化回调处理事件监听器。
+	 */
+	protected abstract void initListeners();
+
+	/**
+	 * 初始化 Netty的服务辅助启动类。
+	 * @return
+	 */
+	protected ServerBootstrap initServerBootstrap4Netty()
     {
     	return new ServerBootstrap()
     		.group(__bossGroup4Netty, __workerGroup4Netty)
+				//设置UDP channel
     		.channel(MBUDPServerChannel.class)
+				//设置用于请求提供服务的处理器
     		.childHandler(initChildChannelHandler4Netty());
     }
-    
+
+	/**
+	 * 初始化针对Netty客户端的handler链，本方法在initServerBootstrap4Netty()中被调用。
+	 * 默认提供：
+	 * 		1.	UDP Session空闲超时处理器（netty内建）
+	 * 		2.	UDP客户端处理器（框架自建）
+	 * @return
+	 */
 	protected ChannelHandler initChildChannelHandler4Netty()
 	{
 		return new ChannelInitializer<Channel>() {
 			@Override
 			protected void initChannel(Channel channel) throws Exception {
 				channel.pipeline()
+						//UDP Session空闲超时处理器（netty内建）
 					.addLast(new ReadTimeoutHandler(SESION_RECYCLER_EXPIRE))
+						//UDP客户端处理器（框架自建）
 					.addLast(new MBUDPClientInboundHandler(serverCoreHandler));
 			}
 		};
 	}
-    
-    public ServerEventListener getServerEventListener()
+
+	/**
+	 * 返回服务端通用事件回调监听器对象引用。
+	 * @return
+	 */
+	public ServerEventListener getServerEventListener()
 	{
 		return serverCoreHandler.getServerEventListener();
 	}
+
+	/**
+	 * 设置服务端通用事件回调监听器。
+	 * @param serverEventListener
+	 */
 	public void setServerEventListener(ServerEventListener serverEventListener)
 	{
 		this.serverCoreHandler.setServerEventListener(serverEventListener);
 	}
-	
+
+	/**
+	 * 返回QoS机制的Server主动消息发送之质量保证事件监听器对象。
+	 * @return
+	 */
 	public MessageQoSEventListenerS2C getServerMessageQoSEventListener()
 	{
 		return serverCoreHandler.getServerMessageQoSEventListener();
 	}
+
+	/**
+	 * 设置QoS机制的Server主动消息发送之质量保证事件监听器。
+	 * @param serverMessageQoSEventListener
+	 */
 	public void setServerMessageQoSEventListener(MessageQoSEventListenerS2C serverMessageQoSEventListener)
 	{
 		this.serverCoreHandler.setServerMessageQoSEventListener(serverMessageQoSEventListener);
 	}
 
+	/**
+	 * 获取 ServerCoreHandler 对象引用。
+	 * @return
+	 */
 	public ServerCoreHandler getServerCoreHandler()
 	{
 		return serverCoreHandler;

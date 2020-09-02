@@ -36,8 +36,13 @@ import io.netty.channel.nio.AbstractNioMessageChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.ServerSocketChannelConfig;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.internal.PlatformDependent;
 
+/**
+ * 仿照TCP协议的NioServerSocketChannel实现的专用于UDP的服务端Channel实现类。
+ * {@link NioServerSocketChannel} 类似netty原生提供的socket服务端类库
+ */
 public class MBUDPServerChannel extends AbstractNioMessageChannel implements ServerSocketChannel 
 {
 	private final ChannelMetadata METADATA = new ChannelMetadata(true);
@@ -48,11 +53,18 @@ public class MBUDPServerChannel extends AbstractNioMessageChannel implements Ser
 
 	public MBUDPServerChannel() throws IOException
 	{
+		//SelectorProvider.provider()    .openDatagramChannel		   		   StandardProtocolFamily.INET
+		//返回系统范围内的默认选择器提供程序 ｜ 打开并创建一个操作系统支持的UDP channel ｜ 互联网协议版本4（IPv4）
 		this(SelectorProvider.provider().openDatagramChannel(StandardProtocolFamily.INET));
 	}
 
+	/**
+	 * 传入处理UDP的channel
+	 * @param datagramChannel UDP channel
+	 */
 	protected MBUDPServerChannel(DatagramChannel datagramChannel)
 	{
+		//构建底层NIO channel通道实例 @{see io.netty.channel.nio.AbstractNioChannel.AbstractNioChannel}
 		super(null, datagramChannel, SelectionKey.OP_READ);
 		this.config = new MBUDPServerChannelConfig(this, datagramChannel);
 	}
@@ -127,6 +139,11 @@ public class MBUDPServerChannel extends AbstractNioMessageChannel implements Ser
 		javaChannel().close();
 	}
 
+	/**
+	 * 将一个客户端的Channel实例从服务端管理的列表中移除。
+	 *
+	 * @param channel
+	 */
 	public void removeChannel(final Channel channel) 
 	{
 		eventLoop().submit(new Runnable() {
@@ -144,27 +161,42 @@ public class MBUDPServerChannel extends AbstractNioMessageChannel implements Ser
 	@Override
 	protected int doReadMessages(List<Object> list) throws Exception
 	{
+		//获取java原生nio提供UDP的channel
 		DatagramChannel javaChannel = javaChannel();
+		//unsafe     在netty中一个很核心的组件，封装了java底层的socket操作，作为连接netty和java 底层nio的重要桥梁。
+		//获取一个自适应的缓冲区分配器
 		RecvByteBufAllocator.Handle allocatorHandle = unsafe().recvBufAllocHandle();
+		//分配一个缓冲
 		ByteBuf buffer = allocatorHandle.allocate(config.getAllocator());
+		//将通道中的数据读取到缓冲中
 		allocatorHandle.attemptedBytesRead(buffer.writableBytes());
-		
+
 		boolean freeBuffer = true;
 		try 
 		{
-			// read message
+			// 将ByteBuf中可写的ByteBuffer取出
 			ByteBuffer nioBuffer = buffer.internalNioBuffer(buffer.writerIndex(), buffer.writableBytes());
+			//获取链接信息之前ByteBuffer写入位置
+			// ======｜=============|
+			//       ^			    ^
+			//     position     capacity
 			int nioPos = nioBuffer.position();
-			
+
+			// 获取客户端链接ip和port
+			// ======｜====IP/port===|===========|
+			//       ^		      	 ^	         ^
+			//     nioPos	     position     capacity
 			InetSocketAddress inetSocketAddress = (InetSocketAddress) javaChannel.receive(nioBuffer);
 			if (inetSocketAddress == null) 
 				return 0;
-			
+
+			//设置上次读取操作已读取的字节。可用于增加以读取的字节数
 			allocatorHandle.lastBytesRead(nioBuffer.position() - nioPos);
 			buffer.writerIndex(buffer.writerIndex() + allocatorHandle.lastBytesRead());
 			
-			// allocate new channel or use existing one and push message to it
+			// 分配新channel或使用现有channel并将消息推送到该channel
 			MBUDPChannel udpchannel = channels.get(inetSocketAddress);
+			//如果address对应channel为空，则创建新channel
 			if ((udpchannel == null) || !udpchannel.isOpen()) 
 			{
 				udpchannel = new MBUDPChannel(this, inetSocketAddress);
@@ -195,6 +227,7 @@ public class MBUDPServerChannel extends AbstractNioMessageChannel implements Ser
 		finally
 		{
 			if (freeBuffer)
+				// 如果属于无用buffer，需要即使回收
 				buffer.release();
 		}
 	}

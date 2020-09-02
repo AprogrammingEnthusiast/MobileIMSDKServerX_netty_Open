@@ -29,8 +29,15 @@ import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.ServerSocketChannelConfig;
 
+/**
+ * 仿照TCP的“形”实现了一个UDP的服务端Channel配置类。
+ *
+ * 因为Netty4中，对于ServerBootstrap来说为了灵活应对各种场景， 有很多参数可供设置，所以从设计模式的角度讲，
+ * 就把这部分配置 独立成了遵从Builder设计模式的封装类，让ServerBootstrap的 API显的更优雅。
+ */
 public class MBUDPServerChannelConfig extends DefaultChannelConfig implements ServerSocketChannelConfig 
 {
+	/** UDP NIO channel通道实例 **/
 	private final DatagramChannel datagramChannel;
 
 	public MBUDPServerChannelConfig(Channel channel, DatagramChannel datagramChannel) 
@@ -41,24 +48,45 @@ public class MBUDPServerChannelConfig extends DefaultChannelConfig implements Se
 		setRecvByteBufAllocator(new FixedRecvByteBufAllocator(2048));
 	}
 
+	/**
+	 * backlog参数主要用于TCP场景下，是内核为此套接口 排队的最大连接个数，UDP时给1就行了，因为没意义。
+	 * @return
+	 */
 	@Override
 	public int getBacklog()
 	{
 		return 1;
 	}
 
+	/**
+	 * backlog参数对于UDP来说无意义，它主要用于TCP场景下，是内核为此套接口 排队的最大连接个数，因而本方法只是个空方法。
+	 * @param backlog
+	 * @return
+	 */
 	@Override
 	public ServerSocketChannelConfig setBacklog(int backlog)
 	{
 		return this;
 	}
 
+	/**
+	 * connectTimeoutMillis对于UDP来说无意义，因而本方法只是个空方法。
+	 * @param timeout
+	 * @return
+	 */
 	@Override
 	public ServerSocketChannelConfig setConnectTimeoutMillis(int timeout) 
 	{
 		return this;
 	}
 
+	/**
+	 * 本方法对于UDP来说无意义，因而本方法只是个空方法。
+	 * @param arg0
+	 * @param arg1
+	 * @param arg2
+	 * @return
+	 */
 	@Override
 	public ServerSocketChannelConfig setPerformancePreferences(int arg0, int arg1, int arg2) 
 	{

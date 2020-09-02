@@ -14,15 +14,13 @@
  * 
  * ServerLauncherImpl.java at 2020-4-14 23:20:49, code by Jack Jiang.
  */
-package net.demo;
+package net.server_demo;
 
 import java.io.IOException;
 
 import net.openmob.mobileimsdk.server.ServerLauncher;
 import net.openmob.mobileimsdk.server.qos.QoS4ReciveDaemonC2S;
 import net.openmob.mobileimsdk.server.qos.QoS4SendDaemonS2C;
-import net.openmob.mobileimsdk.server.utils.ServerToolKits;
-import net.openmob.mobileimsdk.server.utils.ServerToolKits.SenseMode;
 
 /**
  * IM服务的启动主类。

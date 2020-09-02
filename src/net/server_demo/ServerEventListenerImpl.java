@@ -14,7 +14,7 @@
  * 
  * ServerEventListenerImpl.java at 2020-4-14 23:20:49, code by Jack Jiang.
  */
-package net.demo;
+package net.server_demo;
 
 import io.netty.channel.Channel;
 import net.openmob.mobileimsdk.server.event.ServerEventListener;
