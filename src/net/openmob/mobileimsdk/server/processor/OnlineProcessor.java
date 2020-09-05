@@ -25,6 +25,10 @@ import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * MibileIMSDK的服务端用户列表管理类。
+ * 根据全局算法约定，当user_id=0时即表示是服务器。
+ */
 public class OnlineProcessor
 {
 	public final static String USER_ID_IN_SESSION_ATTRIBUTE = "__user_id__";
