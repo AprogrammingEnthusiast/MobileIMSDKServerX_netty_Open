@@ -28,6 +28,9 @@ import net.openmob.mobileimsdk.server.protocal.Protocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 用于服务端的S2C模式下的QoS机制中提供对已收到包进行有限生命周期存储并提供 重复性判断的守护线程。
+ */
 public class QoS4ReciveDaemonRoot
 {
 	private static Logger logger = LoggerFactory.getLogger(QoS4ReciveDaemonRoot.class);  

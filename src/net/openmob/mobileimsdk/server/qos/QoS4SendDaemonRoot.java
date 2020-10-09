@@ -32,6 +32,29 @@ import net.openmob.mobileimsdk.server.utils.LocalSendHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * S2C模式中QoS数据包质量包证机制之发送队列保证实现类.
+ * 本类是QoS机制的核心，目的是加强保证TCP协议在应用层的可靠性和送达率。
+ * 当前QoS机制支持全部的C2C、C2S、S2C共3种消息交互场景下的消息送达质量保证：<>
+ *
+ * 1) Client to Server(C2S)：即由某客户端主动发起，消息最终接收者是服务端，此模式下：重发由C保证、ACK应答由S发回；
+ * 2) Server to Client(S2C)：即由服务端主动发起，消息最终接收者是某客户端，此模式下：重发由S保证、ACK应答由C发回；
+ * 2) Client to Client(C2C)：即由客户端主动发起，消息最终接收者是另一客户端。此模式对于QoS机制来说，相当于C2S+S2C两程路径。
+ * TCP理论上能从底层保证数据的可靠性，但应用层的代码和场景中存在网络本身和网络之外的各种不可靠性， MobileIMSDK中的QoS送达保证机制，将加强TCP的可靠性，确保消息，无法从哪一个层面和维度，都会给 开发者提供两种结果：要么明确被送达（即收到ACK应答包，见 MessageQoSEventListenerS2C.messagesBeReceived(String)）、要行明确未被送达（见 MessageQoSEventListenerS2C.messagesLost(ArrayList)）。从理论上，保证消息的百分百送达率。
+ *
+ * 一个有趣的问题：TCP协议为什么还需要消息送达保证机制？它不是可靠的吗？
+ * 是的，TCP是可靠的，但那是在底层协议这一层。但对于应用层来说，TCP并不能解决消息的百分百可靠性。
+ * 原因有可能是：
+ *
+ *  1）客户端意外崩溃导致TCP缓冲区消息丢失；
+ *  2）网络拥堵，导致TCP反复重传并指数退避，导致长时间无法送达的也应在送达超时时间内被判定为无法送
+ *              达（对于应用层来说tcp传的太慢，用户不可能等的了这么久，否则体验会很差）；
+ *  3）中间路由故障，tcp本身是无法感知的，这种情况下tcp做传输重试也会出现2）中的情况，这也应算是事
+ *     实上的无法送达；
+ *  4）其它更多情况。
+ *
+ * 当前MobileIMSDK的QoS机制支持全部的C2C、C2S、S2C共3种消息交互场景下的消息送达质量保证.
+ */
 public class QoS4SendDaemonRoot
 {
 	private static Logger logger = LoggerFactory.getLogger(QoS4SendDaemonRoot.class);  

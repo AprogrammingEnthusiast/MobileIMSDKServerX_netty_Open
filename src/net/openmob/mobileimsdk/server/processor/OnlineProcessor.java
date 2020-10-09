@@ -36,10 +36,10 @@ public class OnlineProcessor
 			AttributeKey.newInstance(USER_ID_IN_SESSION_ATTRIBUTE);
 	
 	public static boolean DEBUG = false;
-	private static Logger logger = LoggerFactory.getLogger(OnlineProcessor.class); 
+	private static final Logger logger = LoggerFactory.getLogger(OnlineProcessor.class);
 	private static OnlineProcessor instance = null;
 	
-	private ConcurrentMap<String, Channel> onlineSessions = new ConcurrentHashMap<String, Channel>();
+	private final ConcurrentMap<String, Channel> onlineSessions = new ConcurrentHashMap<String, Channel>();
 	
 	public static OnlineProcessor getInstance()
 	{

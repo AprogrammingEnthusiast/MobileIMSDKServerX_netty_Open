@@ -16,6 +16,7 @@
  */
 package net.openmob.mobileimsdk.server.protocal.s;
 
+
 public class PErrorResponse
 {
 	private int errorCode = -1;
